@@ -47,6 +47,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.security.SecureRandom;
+import com.freshchat.consumer.sdk.*;
 
 @SuppressLint("NewApi")
 public class FCMService extends FirebaseMessagingService implements PushConstants {
@@ -89,6 +90,10 @@ public class FCMService extends FirebaseMessagingService implements PushConstant
 
     if (extras != null && isAvailableSender(from)) {
       Context applicationContext = getApplicationContext();
+        if(Freshchat.isFreshchatNotification(extras)){
+               Freshchat.getInstance(getApplicationContext()).handleFcmMessage(getApplicationContext(),extras);
+                return;
+          }
 
       SharedPreferences prefs = applicationContext.getSharedPreferences(PushPlugin.COM_ADOBE_PHONEGAP_PUSH,
           Context.MODE_PRIVATE);

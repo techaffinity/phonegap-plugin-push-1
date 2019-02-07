@@ -9,7 +9,7 @@
 #import "AppDelegate+notification.h"
 #import "PushPlugin.h"
 #import <objc/runtime.h>
-
+#import "FreshchatSDK/FreshchatSDK.h"
 static char launchNotificationKey;
 static char coldstartKey;
 NSString *const pushPluginApplicationDidBecomeActiveNotification = @"pushPluginApplicationDidBecomeActiveNotification";
@@ -69,6 +69,7 @@ NSString *const pushPluginApplicationDidBecomeActiveNotification = @"pushPluginA
 }
 
 - (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
+    [[Freshchat sharedInstance] setPushRegistrationToken:deviceToken];
     PushPlugin *pushHandler = [self getCommandInstance:@"PushNotification"];
     [pushHandler didRegisterForRemoteNotificationsWithDeviceToken:deviceToken];
 }
@@ -80,7 +81,9 @@ NSString *const pushPluginApplicationDidBecomeActiveNotification = @"pushPluginA
 
 - (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
     NSLog(@"didReceiveNotification with fetchCompletionHandler");
-
+    if ([[Freshchat sharedInstance]isFreshchatNotification:userInfo]) {
+        [[Freshchat sharedInstance]handleRemoteNotification:userInfo andAppstate:application.applicationState];
+    }
     // app is in the background or inactive, so only call notification callback if this is a silent push
     if (application.applicationState != UIApplicationStateActive) {
 
@@ -196,7 +199,9 @@ NSString *const pushPluginApplicationDidBecomeActiveNotification = @"pushPluginA
     pushHandler.notificationMessage = notification.request.content.userInfo;
     pushHandler.isInline = YES;
     [pushHandler notificationReceived];
-
+    if ([[Freshchat sharedInstance]isFreshchatNotification:notification.request.content.userInfo]) {
+        [[Freshchat sharedInstance]handleRemoteNotification:notification.request.content.userInfo andAppstate:[[UIApplication sharedApplication] applicationState]];
+   }
     completionHandler(UNNotificationPresentationOptionNone);
 }
 
@@ -209,7 +214,9 @@ didReceiveNotificationResponse:(UNNotificationResponse *)response
     NSMutableDictionary *userInfo = [response.notification.request.content.userInfo mutableCopy];
     [userInfo setObject:response.actionIdentifier forKey:@"actionCallback"];
     NSLog(@"Push Plugin userInfo %@", userInfo);
-
+        if ([[Freshchat sharedInstance]isFreshchatNotification:response.notification.request.content.userInfo]) {
+            [[Freshchat sharedInstance]handleRemoteNotification:response.notification.request.content.userInfo andAppstate:[[UIApplication sharedApplication] applicationState]];
+        }
     switch ([UIApplication sharedApplication].applicationState) {
         case UIApplicationStateActive:
         {

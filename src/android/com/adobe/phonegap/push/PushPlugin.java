@@ -34,6 +34,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.ArrayList;
 import java.util.List;
+import com.freshchat.consumer.sdk.*;
 
 import me.leolin.shortcutbadger.ShortcutBadger;
 
@@ -209,6 +210,7 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
             }
 
             if (!"".equals(token)) {
+              Freshchat.getInstance(getApplicationContext()).setPushRegistrationToken(token);
               JSONObject json = new JSONObject().put(REGISTRATION_ID, token);
               json.put(REGISTRATION_TYPE, FCM);
 
